@@ -1,0 +1,5 @@
+# DOS executables
+*.com
+
+# listing files
+*.lst
