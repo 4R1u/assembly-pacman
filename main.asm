@@ -61,7 +61,7 @@ start:
 
 	mov ax, 0x2401
 	int 0x15			; enable a20
-	; Gate A20 is a workaround for some bug the book does not detail
+	; Gate A20 disables address wraparound
 	; this enables it to open the whole memory for us
 
 	xor eax, eax
