@@ -145,7 +145,9 @@ drawchar:
 	shl eax, 1
 	add edi, eax
 
-	mov esi, [ebp+24]		; 4096 byte font array
+	mov esi, fs
+	shl esi, 4
+	add esi, font			; 4096 byte font array
 	mov edx, 0
 	mov eax, 16			; each character map is 4 bytes
 	mul dword[ebp+20]		; character
@@ -186,7 +188,7 @@ skipwrite:
 	pop ebx
 	pop eax
 	pop ebp
-	ret 20
+	ret 16
 
 pprintstr:
 	push ebp
@@ -205,7 +207,6 @@ printloop:
 	mov dword[ebp+16], 0
 	
 nowrap:
-	push dword[ebp+24]
 	push ebx
 	push dword[ebp+16]
 	push dword[ebp+12]
@@ -218,7 +219,7 @@ nowrap:
 exitpprintstr:
 	pop ebx
 	pop ebp
-	ret 20
+	ret 16
 
 
 pstart:
@@ -230,7 +231,6 @@ pstart:
 	mov ss, ax
 	mov esp, edx		
 
-	push ebx
 	mov eax, fs
 	shl eax, 4
 	add eax, helloworld
@@ -240,70 +240,60 @@ pstart:
 	push 1111100000011111b
 	call pprintstr
 	
-	push ebx
 	push 'H'
 	push 1024/2-8
 	push 768/2-16
 	push 0000011111100000b
 	call drawchar
 
-	push ebx
 	push 'e'
 	push 1024/2
 	push 768/2-16
 	push 0000011100100000b
 	call drawchar
 
-	push ebx
 	push 'l'
 	push 1024/2+8
 	push 768/2-16
 	push 0000011001100000b
 	call drawchar
 
-	push ebx
 	push 'l'
 	push 1024/2+16
 	push 768/2-16
 	push 0000010110100000b
 	call drawchar
 
-	push ebx
 	push 'o'
 	push 1024/2+24
 	push 768/2-16
 	push 0000010011100000b
 	call drawchar
 
-	push ebx
 	push 'W'
 	push 1024/2+40
 	push 768/2-16
 	push 0000010000100000b
 	call drawchar
 
-	push ebx
 	push 'o'
 	push 1024/2+48
 	push 768/2-16
 	push 0000001101100000b
 	call drawchar
 
-	push ebx
 	push 'r'
 	push 1024/2+56
 	push 768/2-16
 	push 0000001010100000b
 	call drawchar
 
-	push ebx
 	push 'l'
 	push 1024/2+64
 	push 768/2-16
 	push 0000000111100000b
 	call drawchar
 
-	push ebx
 	push 'd'
 	push 1024/2+72
 	push 768/2-16
