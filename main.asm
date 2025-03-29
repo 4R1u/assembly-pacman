@@ -18,6 +18,10 @@ gdt:
 gdtreg:
 	dw 0x17				; 16bit limit
 	dd 0				; 32bit base (filled later)
+
+helloworld:
+	db "Hello, world! This is a hello world string I need to print, and test line wrapping with. It seems to work fine.", 0
+
 stack: times 256 dd 0			; 1k stack stacktop: start:
 stacktop:
 
@@ -79,6 +83,9 @@ start:
 	mov bx, cs
 	shl ebx, 4
 	add ebx, font
+	
+	mov ax, cs
+	mov fs, ax
 
 	xor eax, eax
 	mov ax, cs
@@ -101,7 +108,6 @@ start:
 ;	START OF PROTECTED MODE		;
 ;					;
 [bits 32]
-
 
 ;//this is the bitmap font you've loaded
 ;unsigned char *font;
@@ -132,17 +138,17 @@ drawchar:
 	
 	mov edx, 0
 	mov eax, 1024 * 2
-	mul dword[bp+12]		; y
+	mul dword[ebp+12]		; y
 	mov edi, eax
 	add edi, esi
-	mov eax, [bp+16]		; x
+	mov eax, [ebp+16]		; x
 	shl eax, 1
 	add edi, eax
 
-	mov esi, [bp+24]		; 4096 byte font array
+	mov esi, [ebp+24]		; 4096 byte font array
 	mov edx, 0
 	mov eax, 16			; each character map is 4 bytes
-	mul dword[bp+20]		; character
+	mul dword[ebp+20]		; character
 	add esi, eax
 
 	mov ecx, 0
@@ -155,7 +161,7 @@ dcli:					; drawchar loop (inner)
 	test bl, [esi]
 	jz skipwrite
 
-	mov eax, [bp+8]			; color
+	mov eax, [ebp+8]		; color
 	mov [edi], eax
 
 skipwrite:
@@ -182,14 +188,57 @@ skipwrite:
 	pop ebp
 	ret 20
 
+pprintstr:
+	push ebp
+	mov ebp, esp
+	push ebx
+
+printloop:
+	mov ebx, [ebp+20]
+	cmp byte[ebx], 0
+	je exitpprintstr
+	movzx ebx, byte[ebx]
+	cmp dword[ebp+16], 1024
+	jne nowrap
+	
+	add dword[ebp+12], 16
+	mov dword[ebp+16], 0
+	
+nowrap:
+	push dword[ebp+24]
+	push ebx
+	push dword[ebp+16]
+	push dword[ebp+12]
+	push dword[ebp+8]
+	call drawchar
+	add dword[ebp+20], 1
+	add dword[ebp+16], 8
+	jmp printloop
+
+exitpprintstr:
+	pop ebx
+	pop ebp
+	ret 20
+
+
 pstart:
 	mov ax, 0x10			; load all seg regs to 0x10
 	mov ds, ax			; flat memory model
 	mov es, ax
-	mov fs, ax
+;	mov fs, ax
 	mov gs, ax
 	mov ss, ax
-	mov esp, edx
+	mov esp, edx		
+
+	push ebx
+	mov eax, fs
+	shl eax, 4
+	add eax, helloworld
+	push eax
+	push 1024/2-8
+	push 768/2
+	push 1111100000011111b
+	call pprintstr
 	
 	push ebx
 	push 'H'
