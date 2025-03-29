@@ -140,7 +140,7 @@ drawchar:
 	mov eax, 1024 * 2
 	mul dword[ebp+12]		; y
 	mov edi, eax
-	add edi, esi
+	add edi, [fs:modeblock+0x28]
 	mov eax, [ebp+16]		; x
 	shl eax, 1
 	add edi, eax
