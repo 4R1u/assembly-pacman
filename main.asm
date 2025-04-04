@@ -10,6 +10,10 @@ infobuffer:
 mappixels:
 	times 500 db 0
 
+colors:
+	times 4*256 db 0		; each color is 4 bytes
+					; in (B, G, R, 0x00) format
+
 drawmap:
 	push bp
 	mov bp, sp
@@ -55,7 +59,7 @@ drawmap:
 	mul di
 	mov di, ax
 rowloop:
-	cmp cx, 0
+	cmp cx, -1
 	je finisheddrawing
 
 	mov ax, [infobuffer+0x12]	; number of columns
@@ -106,9 +110,10 @@ start:
 	int 0x10
 
 	call drawmap
+	jmp $
 
 exit:
-;	mov ax, 3
-;	int 0x10
+	mov ax, 3
+	int 0x10
 	mov ax, 0x4c00
 	int 0x21
