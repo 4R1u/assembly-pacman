@@ -38,16 +38,22 @@ drawmap:
 ; drawing loop
 ; in pseudocode
 ; func drawmap() {
-;	for (x = no_of_rows; x; --x) {
-;		read file[x] into file_buffer;
-;		for (y = 0; y < no_of_cols; ++y)
-;			es:di = file_bufer[y]
-;		di += no_of_cols;
-;	}
+; 	for (x = no_of_rows; x; --x) {
+; 		read file[x] into file_buffer;
+; 		for (y = 0; y < no_of_cols; ++y)
+; 			es:di = file_bufer[y]
+; 		di += no_of_cols;
+; 	}
 ; }
 
 	mov cx, [infobuffer+0x16]	; number of rows
-	mov di, 0			; this will be used as the "current pixel position"
+	mov di, 200			; ((window height
+	sub di, cx			;  - map height)
+	shr di, 1			; / 2)
+	mov ax, 320			; window height
+	mov dx, 0
+	mul di
+	mov di, ax
 rowloop:
 	cmp cx, 0
 	je finisheddrawing
