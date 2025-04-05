@@ -39,39 +39,6 @@ drawmap:
 	mov dx, infobuffer		; into infobuffer
 	int 0x21
 
-; loading palette
-
-	mov ax, 0x4200			; set cursor position (offset from origin)
-	mov cx, 0			; CX:DX is offset, so CX has to be zero
-	mov dx, 14			; cursor to 14 (number of bytes in the header)
-	add dx, [infobuffer+0x0e]	; plus the size of the header, in bytes
-	int 0x21			; cursor set to palette data in the BMP
-
-	mov ax, 0x3f00			; read
-	mov cx, 1024			; the 1 KiB palette from map.bmp
-	mov dx, colors			; into "colors"
-	int 0x21
-
-	mov si, 0
-	mov cx, 6
-	push bx
-	mov ax, 0x1010			; BIOS function, for INT 10h for changing palette data
-paletteloop:
-	push cx
-	mov bx, si
-	mov bh, bl
-	shr bl, 2
-	mov dh, [colors+si+2]
-	shr dh, 2
-	mov ch, [colors+si+1]
-	shr ch, 2
-	mov cl, [colors+si]
-	shr cl, 2			; these shr operations exist because color values range between 0-63, not 0-255
-	int 0x10
-	pop cx
-	add si, 4
-	loop paletteloop
-
 ; drawing loop
 ; in pseudocode
 ; func drawmap() {
@@ -83,7 +50,6 @@ paletteloop:
 ; 	}
 ; }
 
-	pop bx
 	mov cx, [infobuffer+0x16]	; number of rows
 	mov di, 200			; ((window height
 	sub di, cx			;  - map height)
@@ -139,12 +105,89 @@ finisheddrawing:
 	pop bp
 	ret
 
+loadpalette:
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push ds
+	push es
+	push si
+	push di
+
+	mov ax, cs
+	mov ds, ax			; set DS
+	mov ah, 0x3d			; open existing file
+	mov al, 0x00			; read-only
+	mov dx, mapfilename		; set DS:DX
+	int 0x21
+	mov bx, ax			; bx now has file handle
+
+	mov ah, 0x3f			; read from opened file
+	mov cx, 138			; read 138 bytes
+	mov dx, infobuffer		; into infobuffer
+	int 0x21
+
+; loading palette
+
+	mov ax, 0x4200			; set cursor position (offset from origin)
+	mov cx, 0			; CX:DX is offset, so CX has to be zero
+	mov dx, 14			; cursor to 14 (number of bytes in the header)
+	add dx, [infobuffer+0x0e]	; plus the size of the header, in bytes
+	int 0x21			; cursor set to palette data in the BMP
+
+	mov ax, 0x3f00			; read
+	mov cx, 1024			; the 1 KiB palette from map.bmp
+	mov dx, colors			; into "colors"
+	int 0x21
+
+	mov si, 0
+	mov cx, 6
+	push bx
+	mov ax, 0x1010			; BIOS function, for INT 10h for changing palette data
+paletteloop:
+	push cx
+	mov bx, si
+	mov bh, bl
+	shr bl, 2
+	mov dh, [colors+si+2]
+	shr dh, 2
+	mov ch, [colors+si+1]
+	shr ch, 2
+	mov cl, [colors+si]
+	shr cl, 2			; these shr operations exist because color values range between 0-63, not 0-255
+	int 0x10
+	pop cx
+	add si, 4
+	loop paletteloop
+
+	pop bx
+
+	mov ah, 0x3e			; close map file
+	int 0x21
+
+	pop di
+	pop si
+	pop es
+	pop ds
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+
 start:
 	mov ax, 0x13
 	int 0x10
 
+	call loadpalette
+
+gameloop:
 	call drawmap
-	jmp $
+	jmp gameloop
 
 exit:
 	mov ax, 3
