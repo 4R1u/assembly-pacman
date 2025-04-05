@@ -179,6 +179,27 @@ paletteloop:
 	pop bp
 	ret
 
+clearscr:
+	push bp
+	mov bp, sp
+	push ax
+	push es
+	push di
+
+	mov ax, 0xa000
+	mov es, ax
+	mov di, 0
+	mov cx, 320*200
+	mov ax, 0
+	rep stosb
+
+	pop di
+	pop es
+	pop ax
+	pop bp
+	ret
+
+
 start:
 	mov ax, 0x13
 	int 0x10
