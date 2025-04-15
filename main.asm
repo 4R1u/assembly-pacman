@@ -144,7 +144,7 @@ loadpalette:
 	int 0x21
 
 	mov si, 0
-	mov cx, 6
+	mov cx, 7			; number of colors
 	push bx
 	mov ax, 0x1010			; BIOS function, for INT 10h for changing palette data
 paletteloop:
