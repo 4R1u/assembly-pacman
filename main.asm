@@ -13,6 +13,83 @@ mappixels:
 colors:
 	times 4*256 db 0		; each color is 4 bytes
 					; in (B, G, R, 0x00) format
+	; 53 here is the result of (200 - 94) / 2
+ghostpositions:
+	dw 20*320+193+53*320, 37*320+182+53*320
+	dw 37*320+193+53*320, 37*320+204+53*320
+
+ghostcolors:
+	dw 0x28, 0x35, 0x58, 0xe
+
+ghostfigure:
+;            v-----image stops here, at the 11th or 12th column
+dw 0000000000000000b
+dw 0001111100000000b
+dw 0011111110000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0110111011000000b
+dw 0100010001000000b
+dw 0000000000000000b
+
+drawghost:
+	; takes two arguments, top-left pixel location, and color
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push es
+	push ds
+	push si
+	push di
+
+	push 0xa000
+	pop es
+	mov di, [bp+6]
+	push cs
+	pop ds
+	mov si, ghostfigure
+
+	mov cx, 11
+glo:
+	push cx
+	mov cx, 11
+	push 1000000000000000b		; [bp - 20]
+
+gli:
+	mov ax, [si]
+	and ax, [bp-20]
+	jz skipwrite
+	
+	mov ax, [bp+4]
+	mov [es:di], ax
+
+skipwrite:
+	inc di
+	shr word[bp-20], 1
+	loop gli
+
+	pop ax
+	add si, 2
+	add di, 320-11
+	pop cx
+	loop glo
+
+	pop di
+	pop si
+	pop ds
+	pop es
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret 4
 
 drawmap:
 	push bp
@@ -205,10 +282,12 @@ start:
 	int 0x10
 
 	call loadpalette
-
-gameloop:
 	call drawmap
-	jmp gameloop
+	push word[ghostpositions]
+	push word[ghostcolors]
+	call drawghost
+	
+	jmp $
 
 exit:
 	mov ax, 3
