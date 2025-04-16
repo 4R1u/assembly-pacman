@@ -40,9 +40,6 @@ drawghost:
 	push bp
 	mov bp, sp
 	push ax
-	push bx
-	push cx
-	push dx
 	push es
 	push ds
 	push si
@@ -56,11 +53,11 @@ drawghost:
 	mov si, ghostfigure
 
 glo:
-	push 1000000000000000b		; [bp - 18]
+	push 1000000000000000b		; [bp - 12]
 
 gli:
 	mov ax, [si]
-	and ax, [bp-18]
+	and ax, [bp-12]
 	jz skipwrite
 	
 	mov ax, [bp+4]
@@ -68,8 +65,8 @@ gli:
 
 skipwrite:
 	inc di
-	shr word[bp-18], 1
-	cmp word[bp-18], 10000b
+	shr word[bp-12], 1
+	cmp word[bp-12], 10000b
 	jne gli
 
 	pop ax
@@ -82,9 +79,6 @@ skipwrite:
 	pop si
 	pop ds
 	pop es
-	pop dx
-	pop cx
-	pop bx
 	pop ax
 	pop bp
 	ret 4
