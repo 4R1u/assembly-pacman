@@ -22,7 +22,7 @@ ghostcolors:
 	dw 0x28, 0x35, 0x58, 0xe
 
 ghostfigure:
-;            v-----image stops here, at the 11th or 12th column
+;             v-----image stops here, at the 12th column
 dw 0000000000000000b
 dw 0001111100000000b
 dw 0011111110000000b
@@ -55,15 +55,12 @@ drawghost:
 	pop ds
 	mov si, ghostfigure
 
-	mov cx, 11
 glo:
-	push cx
-	mov cx, 11
-	push 1000000000000000b		; [bp - 20]
+	push 1000000000000000b		; [bp - 18]
 
 gli:
 	mov ax, [si]
-	and ax, [bp-20]
+	and ax, [bp-18]
 	jz skipwrite
 	
 	mov ax, [bp+4]
@@ -71,14 +68,15 @@ gli:
 
 skipwrite:
 	inc di
-	shr word[bp-20], 1
-	loop gli
+	shr word[bp-18], 1
+	cmp word[bp-18], 10000b
+	jne gli
 
 	pop ax
 	add si, 2
 	add di, 320-11
-	pop cx
-	loop glo
+	cmp si, ghostfigure+20
+	jng glo
 
 	pop di
 	pop si
