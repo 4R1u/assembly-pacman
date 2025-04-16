@@ -91,6 +91,27 @@ skipwrite:
 	pop bp
 	ret 4
 
+drawghosts:
+	push bp
+	mov bp, sp
+	push si
+
+	mov si, 0
+
+ghostsloop:
+	cmp si, 8
+	jge exitdrawghostsloop
+	push word[ghostpositions+si]
+	push word[ghostcolors+si]
+	call drawghost
+	add si, 2
+	jmp ghostsloop
+
+exitdrawghostsloop:
+	pop si
+	pop bp
+	ret
+
 drawmap:
 	push bp
 	mov bp, sp
@@ -283,9 +304,7 @@ start:
 
 	call loadpalette
 	call drawmap
-	push word[ghostpositions]
-	push word[ghostcolors]
-	call drawghost
+	call drawghosts
 	
 	jmp $
 
