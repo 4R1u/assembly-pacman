@@ -22,7 +22,7 @@ ghostcolors:
 	dw 0x28, 0x35, 0x58, 0xe
 
 ghostfigure:
-;             v-----image stops here, at the 12th column
+;             v-----image stops here, from the 12th column onwards
 dw 0000000000000000b
 dw 0001111100000000b
 dw 0011111110000000b
@@ -57,11 +57,14 @@ glo:
 
 gli:
 	mov ax, [si]
-	and ax, [bp-12]
+	test ax, [bp-12]
 	jz skipwrite
-	
-	mov ax, [bp+4]
-	mov [es:di], ax
+
+	cmp byte[es:di], 0
+	jne skipwrite
+
+	mov al, [bp+4]
+	mov [es:di], al
 
 skipwrite:
 	inc di
