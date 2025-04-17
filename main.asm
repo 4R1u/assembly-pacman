@@ -86,8 +86,9 @@ skipwrite:
 	pop bp
 	ret 4
 
-moveghostleft:
-	; takes one argument, the ghost number
+moveghost:
+	; takes two arguments, the direction, and the ghost number
+	; (0: left, 1: right, 2: down, 3: up)
 	push bp
 	mov bp, sp
 	push cx
@@ -99,8 +100,34 @@ moveghostleft:
 
 	mov di, ghostpositions
 	add di, [bp+4]
-	sub word[di], 1
 
+	cmp word[bp+6], 0
+	je ghostleft
+	cmp word[bp+6], 1
+	je ghostright
+	cmp word[bp+6], 2
+	je ghostdown
+	; assuming default case here (3) (up)
+	jmp ghostup
+
+
+ghostleft:
+	sub word[di], 1
+	jmp redrawghost
+
+ghostright:
+	add word[di], 1
+	jmp redrawghost
+
+ghostdown:
+	add word[di], 320
+	jmp redrawghost
+
+ghostup:
+	sub word[di], 320
+	jmp redrawghost
+
+redrawghost:
 	push word[di]
 	mov di, ghostcolors
 	add di, [bp+4]
@@ -111,7 +138,7 @@ moveghostleft:
 	pop es
 	pop cx
 	pop bp
-	ret 2
+	ret 4
 
 eraseghost:
 	push bp
