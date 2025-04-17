@@ -86,6 +86,50 @@ skipwrite:
 	pop bp
 	ret 4
 
+moveghostleft:
+	; takes one argument, the ghost number
+	push bp
+	mov bp, sp
+	push cx
+	push es
+	push di
+
+	push 0xa000
+	pop es
+	mov di, ghostpositions
+	add di, [bp+4]
+	mov di, [di]
+
+	mov cx, 11
+clearllo:				; clear left loop (outer)
+	push cx
+	mov cx, 11
+clearlli:				; clear left loop (inner)
+	mov byte[es:di], 0
+	inc di
+	loop clearlli
+
+	add di, 320-11
+	pop cx
+	loop clearllo
+
+	mov di, ghostpositions
+	add di, [bp+4]
+	sub word[di], 1
+
+	push word[di]
+	mov di, ghostcolors
+	add di, [bp+4]
+	push word[di]
+	call drawghost
+
+	pop di
+	pop es
+	pop cx
+	pop bp
+	ret 2
+
+
 drawghosts:
 	push bp
 	mov bp, sp
