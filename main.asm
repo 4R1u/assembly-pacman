@@ -94,24 +94,8 @@ moveghostleft:
 	push es
 	push di
 
-	push 0xa000
-	pop es
-	mov di, ghostpositions
-	add di, [bp+4]
-	mov di, [di]
-
-	mov cx, 11
-clearllo:				; clear left loop (outer)
-	push cx
-	mov cx, 11
-clearlli:				; clear left loop (inner)
-	mov byte[es:di], 0
-	inc di
-	loop clearlli
-
-	add di, 320-11
-	pop cx
-	loop clearllo
+	push word[bp+4]
+	call eraseghost
 
 	mov di, ghostpositions
 	add di, [bp+4]
@@ -129,6 +113,37 @@ clearlli:				; clear left loop (inner)
 	pop bp
 	ret 2
 
+eraseghost:
+	push bp
+	mov bp, sp
+	push cx
+	push es
+	push di
+
+	push 0xa000
+	pop es
+	mov di, ghostpositions
+	add di, [bp+4]
+	mov di, [di]
+
+	mov cx, 11
+eglo:					; erase ghost loop (outer)
+	push cx
+	mov cx, 11
+egli:					; erase ghost loop (inner)
+	mov byte[es:di], 0
+	inc di
+	loop egli
+
+	add di, 320-11
+	pop cx
+	loop eglo
+	
+	pop di
+	pop es
+	pop cx
+	pop bp
+	ret 2
 
 drawghosts:
 	push bp
