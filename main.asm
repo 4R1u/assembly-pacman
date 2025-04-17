@@ -116,6 +116,7 @@ moveghostleft:
 eraseghost:
 	push bp
 	mov bp, sp
+	push bx
 	push cx
 	push es
 	push di
@@ -131,7 +132,15 @@ eglo:					; erase ghost loop (outer)
 	push cx
 	mov cx, 11
 egli:					; erase ghost loop (inner)
+	mov bx, [bp+4]
+	add bx, ghostcolors
+	mov bl, byte[bx]
+	cmp [es:di], bl
+	jne skiperase
+
 	mov byte[es:di], 0
+
+skiperase:
 	inc di
 	loop egli
 
@@ -142,6 +151,7 @@ egli:					; erase ghost loop (inner)
 	pop di
 	pop es
 	pop cx
+	pop bx
 	pop bp
 	ret 2
 
@@ -359,7 +369,7 @@ start:
 	call loadpalette
 	call drawmap
 	call drawghosts
-	
+
 	jmp $
 
 exit:
