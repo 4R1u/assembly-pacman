@@ -86,6 +86,54 @@ skipwrite:
 	pop bp
 	ret 4
 
+ghostcollision:
+; takes two arguments, the return value, and the position
+; it assumes the ghost has been erased first
+; returns 0 when there is no collision
+; returns 1 when there is a collision
+	push bp
+	mov bp, sp
+	push cx
+	push es
+	push di
+
+	push 0xa000
+	pop es
+	
+	mov di, [bp+4]
+	mov cx, 11
+gclo:
+	push cx
+	mov cx, 11
+gcli:
+	cmp byte[es:di], 0
+	je continuegcli
+	cmp byte[es:di], 2
+	je continuegcli
+	cmp byte[es:di], 4
+	jne gc
+continuegcli:
+	inc di
+	loop gcli
+	pop cx
+	add di, 320-11
+	loop gclo
+	jmp gnc
+
+gc:
+	mov word[bp+6], 1
+	jmp exitgc
+gnc:
+	mov word[bp+6], 0
+	jmp exitgc
+
+exitgc:
+	pop di
+	pop es
+	pop cx
+	pop bp
+	ret 2
+
 moveghost:
 	; takes two arguments, the direction, and the ghost number
 	; (0: left, 1: right, 2: down, 3: up)
@@ -109,7 +157,6 @@ moveghost:
 	je ghostdown
 	; assuming default case here (3) (up)
 	jmp ghostup
-
 
 ghostleft:
 	sub word[di], 1
