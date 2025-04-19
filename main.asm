@@ -102,14 +102,15 @@ chasepacman:
 	push word[bp+4]
 	call eraseghost
 
-	mov di, [bp+4]
-	add di, ghostpositions
+	mov bx, [bp+4]
+	add bx, ghostpositions
+	mov di, [bx]
 	sub di, 53*320			; di now stores the position of the
 					; selected ghost relative to the top 
 					; left corner of the map, not 0xa0000
 
 	mov si, [pacmanposition]
-	sub si, 53*120			; si now stores the position of Pac-Man
+	sub si, 53*320			; si now stores the position of Pac-Man
 					; , the same as above
 
 	mov bx, 320
@@ -132,6 +133,8 @@ chasepacman:
 	pop dx				; dx -> ghost.y again
 					; we no longer need si to store
 					; Pac-Man's position
+
+	add di, 53*320
 
 	; compare pacman and ghost positions here
 	cmp bx, dx
@@ -693,7 +696,7 @@ start:
 	call drawghosts
 
 moveloop:
-	push 0
+	push 4
 	call chasepacman
 	mov cx, 0xffff
 	loop $
