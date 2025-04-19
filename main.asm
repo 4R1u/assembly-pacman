@@ -696,7 +696,13 @@ start:
 	call drawghosts
 
 moveloop:
+	push 0
+	call chasepacman
+	push 2
+	call chasepacman
 	push 4
+	call chasepacman
+	push 6
 	call chasepacman
 	mov cx, 0xffff
 	loop $
