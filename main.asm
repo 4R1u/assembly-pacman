@@ -18,6 +18,9 @@ ghostpositions:
 	dw 20*320+193+53*320, 37*320+182+53*320
 	dw 37*320+193+53*320, 37*320+204+53*320
 
+pacmanposition:
+	dw 75*320+193+53*320		; this should have been 74*320+193+53*320, but it was one pixel too close to the dots
+
 ghostcolors:
 	dw 0x28, 0x35, 0x58, 0xe
 
@@ -52,10 +55,10 @@ drawghost:
 	pop ds
 	mov si, ghostfigure
 
-glo:
+glo:					; ghost loop (outer)
 	push 1000000000000000b		; [bp - 12]
 
-gli:
+gli:					; ghost loop (inner)
 	mov ax, [si]
 	test ax, [bp-12]
 	jz skipwrite
@@ -102,10 +105,10 @@ ghostcollision:
 	
 	mov di, [bp+4]
 	mov cx, 11
-gclo:
+gclo:					; ghost collision loop (outer)
 	push cx
 	mov cx, 11
-gcli:
+gcli:					; ghost collision loop (inner)
 	cmp byte[es:di], 0
 	je continuegcli
 	cmp byte[es:di], 2
@@ -120,10 +123,10 @@ continuegcli:
 	loop gclo
 	jmp gnc
 
-gc:
+gc:					; ghost collides
 	mov word[bp+6], 1
 	jmp exitgc
-gnc:
+gnc:					; ghost does not collide
 	mov word[bp+6], 0
 	jmp exitgc
 
@@ -443,6 +446,14 @@ start:
 	call loadpalette
 	call drawmap
 	call drawghosts
+
+moveloop:
+	push 2
+	push 0
+	call moveghost
+	mov cx, 0xffff
+	loop $
+	jmp moveloop
 
 	jmp $
 
