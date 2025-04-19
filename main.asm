@@ -38,6 +38,251 @@ dw 0110111011000000b
 dw 0100010001000000b
 dw 0000000000000000b
 
+chasepacman:
+; logic should go something like this
+; def chasepacman(ghost num):
+;     if pacman is below ghost:
+;         if ghost can move down:
+;             move down
+;         elif pacman is to the left and there is space to the left:
+;             move left
+;         elif there is space to the right:
+;             move right
+;         elif there is space above:
+;             move up
+;         elif there is space to the left:
+;             move left
+;     elif pacman is above ghost:
+;         if ghost can move up:
+;             move up
+;         elif pacman is to the left and there is space to the left:
+;             move left
+;         elif there is space to the right:
+;             move right
+;         elif there is space below:
+;             move down
+;         elif there is space to the left:
+;             move left
+;     elif pacman is directly to the left:
+;         if ghost can move left:
+;             move left
+;         elif pacman is above the ghost and there is space above:
+;             move up
+;         elif there is space below:
+;             move down
+;         elif there is a space to the right:
+;             move down
+;         elif there is space above:
+;             move up
+;     else:
+;         if ghost can move right:
+;             move right
+;         elif pacman is above the ghost and there is space above:
+;             move up
+;         elif there is space below:
+;             move down
+;         elif there is a space to the left:
+;             move left
+;         elif there is space above:
+;             move up
+
+
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push di
+	push si
+
+	push 0xa000
+	pop es
+
+	push word[bp+4]
+	call eraseghost
+
+	mov di, [bp+4]
+	add di, ghostpositions
+	sub di, 53*320			; di now stores the position of the
+					; selected ghost relative to the top 
+					; left corner of the map, not 0xa0000
+
+	mov si, [pacmanposition]
+	sub si, 53*120			; si now stores the position of Pac-Man
+					; , the same as above
+
+	mov bx, 320
+	mov ax, di
+	mov dx, 0
+	div bx
+	mov cx, dx			; cx -> ghost.x
+	mov dx, ax			; dx -> ghost.y
+
+	push dx
+
+	mov ax, si
+	mov dx, 0
+	div bx
+	push ax
+	push dx
+	pop ax				; ax -> pacman.x
+	pop bx				; bx -> pacman.y
+
+	pop dx				; dx -> ghost.y again
+					; we no longer need si to store
+					; Pac-Man's position
+
+	; compare pacman and ghost positions here
+	cmp bx, dx
+	jb pacmanisbelow
+	ja pacmanisabove
+
+	cmp ax, cx
+	jb pacmanistotheleft
+	ja pacmanistotheright
+
+	push word[bp+4]
+	call eraseghost
+
+pacmanisabove:
+	push di
+	add di, 320
+	push 0				; [bp-16]
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchaseup
+	pop di
+	pop di
+
+	cmp ax, cx
+	jb pacmanistotheleft
+	jmp pacmanistotheright
+
+pacmanisbelow:
+	push di
+	sub di, 320
+	push 0				; [bp-16]
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchasedown
+	pop di
+	pop di
+
+	cmp ax, cx
+	jb pacmanistotheleft
+	jmp pacmanistotheright
+
+pacmanistotheleft:
+	push di
+	push 0				; [bp-16]
+	sub di, 1
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchaseleft
+	pop di
+	pop di
+
+	push di
+	sub di, 320
+	push 0				; [bp-16]
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchasedown
+	pop di
+	pop di
+
+	push di
+	add di, 320
+	push 0				; [bp-16]
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchaseup
+	pop di
+	pop di
+
+	jmp ghostchaseright
+
+
+pacmanistotheright:
+	push di
+	push 0				; [bp-16]
+	add di, 1
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchaseleft
+	pop di
+	pop di
+
+	push di
+	sub di, 320
+	push 0				; [bp-16]
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchasedown
+	pop di
+	pop di
+
+	push di
+	add di, 320
+	push 0				; [bp-16]
+	push di
+	call ghostcollision
+	cmp word[bp-16], 0
+	je ghostchaseup
+	pop di
+	pop di
+
+	jmp ghostchaseleft
+
+
+
+ghostchaseleft:
+	pop di
+	pop di
+	push 0
+	push word[bp+4]
+	call moveghost
+	jmp exitchasepacman
+ghostchaseright:
+	pop di
+	pop di
+	push 1
+	push word[bp+4]
+	call moveghost
+	jmp exitchasepacman
+ghostchaseup:
+	pop di
+	pop di
+	push 3
+	push word[bp+4]
+	call moveghost
+	jmp exitchasepacman
+ghostchasedown:
+	pop di
+	pop di
+	push 2
+	push word[bp+4]
+	call moveghost
+	jmp exitchasepacman
+
+exitchasepacman:
+	pop si
+	pop di
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret 2
+
 drawghost:
 	; takes two arguments, top-left pixel location, and color
 	push bp
@@ -448,9 +693,8 @@ start:
 	call drawghosts
 
 moveloop:
-	push 2
 	push 0
-	call moveghost
+	call chasepacman
 	mov cx, 0xffff
 	loop $
 	jmp moveloop
