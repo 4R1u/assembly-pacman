@@ -372,11 +372,12 @@ continuegcli:
 	jmp gnc
 
 gc:					; ghost collides
+	pop cx
 	mov word[bp+6], 1
 	jmp exitgc
 gnc:					; ghost does not collide
 	mov word[bp+6], 0
-	jmp exitgc
+;	jmp exitgc
 
 exitgc:
 	pop di
