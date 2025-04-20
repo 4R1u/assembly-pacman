@@ -686,6 +686,19 @@ clearscr:
 	pop bp
 	ret
 
+ghostschasepacman:
+	push bp
+	mov bp, sp
+	push 0
+	call chasepacman
+	push 2
+	call chasepacman
+	push 4
+	call chasepacman
+	push 6
+	call chasepacman
+	pop bp
+	ret
 
 start:
 	mov ax, 0x13
@@ -696,14 +709,7 @@ start:
 	call drawghosts
 
 moveloop:
-	push 0
-	call chasepacman
-	push 2
-	call chasepacman
-	push 4
-	call chasepacman
-	push 6
-	call chasepacman
+	call ghostschasepacman
 	mov cx, 0xffff
 	loop $
 	jmp moveloop
