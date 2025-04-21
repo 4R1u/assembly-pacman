@@ -104,14 +104,10 @@ chasepacman:
 
 	mov bx, [bp+4]
 	add bx, ghostpositions
-	mov di, [bx]
-	sub di, 53*320			; di now stores the position of the
-					; selected ghost relative to the top 
-					; left corner of the map, not 0xa0000
+	mov di, [bx]			; di now stores the position of the
+					; selected ghost
 
-	mov si, [pacmanposition]
-	sub si, 53*320			; si now stores the position of Pac-Man
-					; , the same as above
+	mov si, [pacmanposition]	; si now stores the position of Pac-Man
 
 	mov bx, 320
 	mov ax, di
@@ -134,12 +130,10 @@ chasepacman:
 					; we no longer need si to store
 					; Pac-Man's position
 
-	add di, 53*320
-
 	; compare pacman and ghost positions here
 	cmp bx, dx
-	jb pacmanisbelow
-	ja pacmanisabove
+	ja pacmanisbelow
+	jb pacmanisabove
 
 	cmp ax, cx
 	jb pacmanistotheleft
@@ -150,7 +144,7 @@ chasepacman:
 
 pacmanisabove:
 	push di
-	add di, 320
+	sub di, 320
 	push 0				; [bp-16]
 	push di
 	call ghostcollision
@@ -165,7 +159,7 @@ pacmanisabove:
 
 pacmanisbelow:
 	push di
-	sub di, 320
+	add di, 320
 	push 0				; [bp-16]
 	push di
 	call ghostcollision
@@ -190,7 +184,7 @@ pacmanistotheleft:
 	pop di
 
 	push di
-	sub di, 320
+	add di, 320
 	push 0				; [bp-16]
 	push di
 	call ghostcollision
@@ -200,7 +194,7 @@ pacmanistotheleft:
 	pop di
 
 	push di
-	add di, 320
+	sub di, 320
 	push 0				; [bp-16]
 	push di
 	call ghostcollision
@@ -219,12 +213,12 @@ pacmanistotheright:
 	push di
 	call ghostcollision
 	cmp word[bp-16], 0
-	je ghostchaseleft
+	je ghostchaseright
 	pop di
 	pop di
 
 	push di
-	sub di, 320
+	add di, 320
 	push 0				; [bp-16]
 	push di
 	call ghostcollision
@@ -234,7 +228,7 @@ pacmanistotheright:
 	pop di
 
 	push di
-	add di, 320
+	sub di, 320
 	push 0				; [bp-16]
 	push di
 	call ghostcollision
