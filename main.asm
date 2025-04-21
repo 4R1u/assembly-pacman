@@ -39,54 +39,6 @@ dw 0100010001000000b
 dw 0000000000000000b
 
 chasepacman:
-; logic should go something like this
-; def chasepacman(ghost num):
-;     if pacman is below ghost:
-;         if ghost can move down:
-;             move down
-;         elif pacman is to the left and there is space to the left:
-;             move left
-;         elif there is space to the right:
-;             move right
-;         elif there is space above:
-;             move up
-;         elif there is space to the left:
-;             move left
-;     elif pacman is above ghost:
-;         if ghost can move up:
-;             move up
-;         elif pacman is to the left and there is space to the left:
-;             move left
-;         elif there is space to the right:
-;             move right
-;         elif there is space below:
-;             move down
-;         elif there is space to the left:
-;             move left
-;     elif pacman is directly to the left:
-;         if ghost can move left:
-;             move left
-;         elif pacman is above the ghost and there is space above:
-;             move up
-;         elif there is space below:
-;             move down
-;         elif there is a space to the right:
-;             move down
-;         elif there is space above:
-;             move up
-;     else:
-;         if ghost can move right:
-;             move right
-;         elif pacman is above the ghost and there is space above:
-;             move up
-;         elif there is space below:
-;             move down
-;         elif there is a space to the left:
-;             move left
-;         elif there is space above:
-;             move up
-
-
 	push bp
 	mov bp, sp
 	push ax
