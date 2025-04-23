@@ -661,8 +661,6 @@ start:
 
 moveloop:
 	call ghostschasepacman
-	mov cx, 0xffff
-	loop $
 	jmp moveloop
 
 	jmp $
