@@ -81,7 +81,7 @@ xorshift:
 	jne skipresetxorshiftstate
 
 	; db 0x66
-	mov dword[xorshift_state], 1
+	mov dword[xorshift_state], 2527132011
 
 skipresetxorshiftstate:
 	; db 0x66
