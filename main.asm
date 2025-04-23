@@ -42,7 +42,8 @@ dw 0100010001000000b
 dw 0000000000000000b
 
 xorshift_state:
-	dd 1
+	dd 2527132011			; taken from the output of
+					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
 
 xorshift:
 	; NOTE: if your assembler does not compile this function properly,
