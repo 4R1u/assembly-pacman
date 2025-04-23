@@ -168,6 +168,102 @@ skipwrite:
 	pop bp
 	ret 4
 
+trymoveghost:
+	; takes two arguments, the direction and ghost and ghost number
+	push bp
+	mov bp, sp
+	push di
+	
+	push word[bp+4]
+	call eraseghost
+
+	mov di, ghostpositions
+	add di, word[bp+4]
+	mov di, [di]
+
+	cmp word[bp+6], 0
+	je trymoveghostleft
+	cmp word[bp+6], 1
+	je trymoveghostright
+	cmp word[bp+6], 2
+	je trymoveghostdown
+	jmp trymoveghostup
+
+trymoveghostleft:
+	push di
+	sub di, 1
+	push 0				; [bp-6]
+	push di
+	call ghostcollision
+	cmp word[bp-6], 0
+	je canmoveghost
+	pop di
+	pop di
+	jmp cantmoveghost
+
+trymoveghostright:
+	push di
+	add di, 1
+	push 0				; [bp-6]
+	push di
+	call ghostcollision
+	cmp word[bp-6], 0
+	je canmoveghost
+	pop di
+	pop di
+	jmp cantmoveghost
+
+trymoveghostdown:
+	push di
+	add di, 320
+	push 0				; [bp-6]
+	push di
+	call ghostcollision
+	cmp word[bp-6], 0
+	je canmoveghost
+	pop di
+	pop di
+	jmp cantmoveghost
+
+trymoveghostup:
+	push di
+	sub di, 320
+	push 0				; [bp-6]
+	push di
+	call ghostcollision
+	cmp word[bp-6], 0
+	je canmoveghost
+	pop di
+	pop di
+	jmp cantmoveghost
+
+jmp cantmoveghost
+
+
+canmoveghost:
+	pop di
+	pop di
+	push word[bp+6]
+	push word[bp+4]
+	call moveghost
+	jmp exittrymoveghostloop
+
+cantmoveghost:
+	mov di, ghostpositions
+	add di, [bp+4]
+	mov di, [di]
+	push di
+	mov di, ghostcolors
+	add di, [bp+4]
+	mov di, [di]
+	push di
+	call drawghost
+
+exittrymoveghostloop:
+	pop di
+	pop bp
+	ret 4
+
 ghostcollision:
 ; takes two arguments, the return value, and the position
 ; it assumes the ghost has been erased first
@@ -543,7 +639,7 @@ chaseloop:
 	; db 0x66
 	mov [bp-10], edx		; rand() % 4
 	push cx
-	call moveghost
+	call trymoveghost
 	add cx, 2
 	pop ax
 	jmp chaseloop
