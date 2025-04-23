@@ -18,6 +18,9 @@ ghostpositions:
 	dw 20*320+193+53*320, 37*320+182+53*320
 	dw 37*320+193+53*320, 37*320+204+53*320
 
+four:
+	dw 4				; this is needed for the modulo
+
 pacmanposition:
 	dw 75*320+193+53*320		; this should have been 74*320+193+53*320, but it was one pixel too close to the dots
 
@@ -38,199 +41,53 @@ dw 0110111011000000b
 dw 0100010001000000b
 dw 0000000000000000b
 
-chasepacman:
+xorshift_state:
+	dw 1
+
+xorshift:
+	; takes no arguments
+	; returns a random number
+	; its logic should go somethimg like this, taken from
+	; http://www.retroprogramming.com/2017/07/xorshift-pseudorandom-numbers-in-z80.html
+;unsigned xs = 1;
+;
+;unsigned xorshift( )
+;{
+;    xs ^= xs << 7;
+;    xs ^= xs >> 9;
+;    xs ^= xs << 8;
+;    return xs;
+;}
 	push bp
 	mov bp, sp
 	push ax
-	push bx
-	push cx
-	push dx
-	push di
-	push si
 
-	push 0xa000
-	pop es
+	cmp word[xorshift_state], 0
+	jne skipresetxorshiftstate
 
-	push word[bp+4]
-	call eraseghost
+	mov word[xorshift_state], 1
 
-	mov bx, [bp+4]
-	add bx, ghostpositions
-	mov di, [bx]			; di now stores the position of the
-					; selected ghost
+skipresetxorshiftstate:
+	mov ax, [xorshift_state]
 
-	mov si, [pacmanposition]	; si now stores the position of Pac-Man
+	mov word[bp+4], ax
+	shr ax, 7
+	xor [bp+4], ax
 
-	mov bx, 320
-	mov ax, di
-	mov dx, 0
-	div bx
-	mov cx, dx			; cx -> ghost.x
-	mov dx, ax			; dx -> ghost.y
+	mov ax, [bp+4]
+	shl ax, 9
+	xor [bp+4], ax
+	
+	mov ax, [bp+4]
+	shr ax, 8
+	xor [bp+4], ax
+	
+	mov ax, [bp+4]
+	mov [xorshift_state], ax
 
-	push dx
-
-	mov ax, si
-	mov dx, 0
-	div bx
-	push ax
-	push dx
-	pop ax				; ax -> pacman.x
-	pop bx				; bx -> pacman.y
-
-	pop dx				; dx -> ghost.y again
-					; we no longer need si to store
-					; Pac-Man's position
-
-	; compare pacman and ghost positions here
-	cmp bx, dx
-	ja pacmanisbelow
-	jb pacmanisabove
-
-	cmp ax, cx
-	jb pacmanistotheleft
-	ja pacmanistotheright
-
-	push word[bp+4]
-	call eraseghost
-
-pacmanisabove:
-	push di
-	sub di, 320
-	push 0				; [bp-16]
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchaseup
-	pop di
-	pop di
-
-	cmp ax, cx
-	jb pacmanistotheleft
-	jmp pacmanistotheright
-
-pacmanisbelow:
-	push di
-	add di, 320
-	push 0				; [bp-16]
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchasedown
-	pop di
-	pop di
-
-	cmp ax, cx
-	jb pacmanistotheleft
-	jmp pacmanistotheright
-
-pacmanistotheleft:
-	push di
-	push 0				; [bp-16]
-	sub di, 1
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchaseleft
-	pop di
-	pop di
-
-	push di
-	add di, 320
-	push 0				; [bp-16]
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchasedown
-	pop di
-	pop di
-
-	push di
-	sub di, 320
-	push 0				; [bp-16]
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchaseup
-	pop di
-	pop di
-
-	jmp ghostchaseright
-
-
-pacmanistotheright:
-	push di
-	push 0				; [bp-16]
-	add di, 1
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchaseright
-	pop di
-	pop di
-
-	push di
-	add di, 320
-	push 0				; [bp-16]
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchasedown
-	pop di
-	pop di
-
-	push di
-	sub di, 320
-	push 0				; [bp-16]
-	push di
-	call ghostcollision
-	cmp word[bp-16], 0
-	je ghostchaseup
-	pop di
-	pop di
-
-	jmp ghostchaseleft
-
-
-
-ghostchaseleft:
-	pop di
-	pop di
-	push 0
-	push word[bp+4]
-	call moveghost
-	jmp exitchasepacman
-ghostchaseright:
-	pop di
-	pop di
-	push 1
-	push word[bp+4]
-	call moveghost
-	jmp exitchasepacman
-ghostchaseup:
-	pop di
-	pop di
-	push 3
-	push word[bp+4]
-	call moveghost
-	jmp exitchasepacman
-ghostchasedown:
-	pop di
-	pop di
-	push 2
-	push word[bp+4]
-	call moveghost
-	jmp exitchasepacman
-
-exitchasepacman:
-	pop si
-	pop di
-	pop dx
-	pop cx
-	pop bx
 	pop ax
 	pop bp
-	ret 2
+	ret
 
 drawghost:
 	; takes two arguments, top-left pixel location, and color
@@ -636,14 +493,29 @@ clearscr:
 ghostschasepacman:
 	push bp
 	mov bp, sp
-	push 0
-	call chasepacman
-	push 2
-	call chasepacman
-	push 4
-	call chasepacman
-	push 6
-	call chasepacman
+	push ax
+	push cx
+	push dx
+
+	mov cx, 0
+chaseloop:
+	cmp cx, 8
+	je exitghostschasepacman
+	push 0				; [bp-8]
+	call xorshift
+	mov ax, [bp-8]
+	mov dx, 0
+	div word [four]
+	mov [bp-8], dx			; rand() % 4
+	push cx
+	call moveghost
+	add cx, 2
+	jmp chaseloop
+
+exitghostschasepacman:
+	pop dx
+	pop cx
+	pop ax
 	pop bp
 	ret
 
