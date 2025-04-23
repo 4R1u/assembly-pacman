@@ -19,7 +19,7 @@ ghostpositions:
 	dw 37*320+193+53*320, 37*320+204+53*320
 
 four:
-	dw 4				; this is needed for the modulo
+	dd 4				; this is needed for the modulo
 
 pacmanposition:
 	dw 75*320+193+53*320		; this should have been 74*320+193+53*320, but it was one pixel too close to the dots
@@ -42,50 +42,78 @@ dw 0100010001000000b
 dw 0000000000000000b
 
 xorshift_state:
-	dw 1
+	dd 1
 
 xorshift:
+	; NOTE: if your assembler does not compile this function properly,
+	; uncommenting all the db 0x66 lines should make it work
+
 	; takes no arguments
 	; returns a random number
-	; its logic should go somethimg like this, taken from
-	; http://www.retroprogramming.com/2017/07/xorshift-pseudorandom-numbers-in-z80.html
-;unsigned xs = 1;
+	; its logic should go somethimg like this, taken from wikipedia
+
+;#include <stdint.h>
 ;
-;unsigned xorshift( )
+;struct xorshift32_state {
+;    uint32_t a;
+;};
+;
+;/* The state must be initialized to non-zero */
+;uint32_t xorshift32(struct xorshift32_state *state)
 ;{
-;    xs ^= xs << 7;
-;    xs ^= xs >> 9;
-;    xs ^= xs << 8;
-;    return xs;
+;	/* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
+;	uint32_t x = state->a;
+;	x ^= x << 13;
+;	x ^= x >> 17;
+;	x ^= x << 5;
+;	return state->a = x;
 ;}
+
 	push bp
 	mov bp, sp
-	push ax
+	; db 0x66
+	push eax
 
-	cmp word[xorshift_state], 0
+	; db 0x66
+	cmp dword[xorshift_state], 0
+	; db 0x66
 	jne skipresetxorshiftstate
 
-	mov word[xorshift_state], 1
+	; db 0x66
+	mov dword[xorshift_state], 1
 
 skipresetxorshiftstate:
-	mov ax, [xorshift_state]
+	; db 0x66
+	mov eax, [xorshift_state]
 
-	mov word[bp+4], ax
-	shr ax, 7
-	xor [bp+4], ax
+	; db 0x66
+	mov dword[bp+4], eax
+	; db 0x66
+	shr eax, 13
+	; db 0x66
+	xor [bp+4], eax
 
-	mov ax, [bp+4]
-	shl ax, 9
-	xor [bp+4], ax
+	; db 0x66
+	mov eax, [bp+4]
+	; db 0x66
+	shl eax, 17
+	; db 0x66
+	xor [bp+4], eax
 	
-	mov ax, [bp+4]
-	shr ax, 8
-	xor [bp+4], ax
+	; db 0x66
+	mov eax, [bp+4]
+	; db 0x66
+	shr eax, 5
+	; db 0x66
+	xor [bp+4], eax
 	
-	mov ax, [bp+4]
-	mov [xorshift_state], ax
+	; db 0x66
+	mov eax, [bp+4]
+	; db 0x66
+	mov [xorshift_state], eax
 
-	pop ax
+	; db 0x66
+	pop eax
 	pop bp
 	ret
 
@@ -491,6 +519,8 @@ clearscr:
 	ret
 
 ghostschasepacman:
+	; NOTE: if your assembler does not compile this function properly,
+	; uncommenting all the db 0x66 lines should make it work
 	push bp
 	mov bp, sp
 	push ax
@@ -501,15 +531,21 @@ ghostschasepacman:
 chaseloop:
 	cmp cx, 8
 	je exitghostschasepacman
-	push 0				; [bp-8]
+	; db 0x66
+	push dword 0			; [bp-10]
 	call xorshift
-	mov ax, [bp-8]
-	mov dx, 0
-	div word [four]
-	mov [bp-8], dx			; rand() % 4
+	; db 0x66
+	mov eax, [bp-10]
+	; db 0x66
+	mov edx, 0
+	; db 0x66
+	div dword [four]
+	; db 0x66
+	mov [bp-10], edx		; rand() % 4
 	push cx
 	call moveghost
 	add cx, 2
+	pop ax
 	jmp chaseloop
 
 exitghostschasepacman:
