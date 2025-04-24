@@ -24,6 +24,9 @@ four:
 pacmanposition:
 	dw 75*320+193+53*320		; this should have been 74*320+193+53*320, but it was one pixel too close to the dots
 
+pacmandirection:
+	db 0
+
 ghostcolors:
 	dw 0x28, 0x35, 0x58, 0xe
 
@@ -58,6 +61,52 @@ xorshift_state:
 	dd 2527132011			; taken from the output of
 					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
 
+movepacman:
+	; takes one argument, the direction
+	; (0: left, 1: right, 2: down, 3: up)
+	push bp
+	mov bp, sp
+	push cx
+	push es
+	push di
+
+	call erasepacman
+
+	mov di, pacmanposition
+
+	cmp byte[pacmandirection], 0
+	je pacmanleft
+	cmp byte[pacmandirection], 1
+	je pacmanright
+	cmp byte[pacmandirection], 2
+	je pacmandown
+	; assuming default case here (3) (up)
+	jmp pacmanup
+
+pacmanleft:
+	sub word[di], 1
+	jmp redrawpacman
+
+pacmanright:
+	add word[di], 1
+	jmp redrawpacman
+
+pacmandown:
+	add word[di], 320
+	jmp redrawpacman
+
+pacmanup:
+	sub word[di], 320
+	jmp redrawpacman
+
+redrawpacman:
+	call drawpacman
+
+	pop di
+	pop es
+	pop cx
+	pop bp
+	ret
 
 drawpacman:
 	push bp
@@ -758,6 +807,7 @@ start:
 	call drawpacman
 
 moveloop:
+	call movepacman
 	call ghostschasepacman
 	jmp moveloop
 
