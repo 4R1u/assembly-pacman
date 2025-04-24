@@ -139,7 +139,7 @@ epli:					; erase pacman loop (inner)
 	pop cx
 	pop bx
 	pop bp
-	ret 2
+	ret
 
 xorshift:
 	; NOTE: if your assembler does not compile this function properly,
