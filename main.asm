@@ -94,6 +94,8 @@ trymovepacmanleft:
 	call pacmancollision
 	cmp word[bp-6], 0
 	je canmovepacman
+	cmp word[bp-6], 2
+	je pointfound
 	pop di
 	pop di
 	jmp cantmovepacman
@@ -106,6 +108,8 @@ trymovepacmanright:
 	call pacmancollision
 	cmp word[bp-6], 0
 	je canmovepacman
+	cmp word[bp-6], 2
+	je pointfound
 	pop di
 	pop di
 	jmp cantmovepacman
@@ -118,6 +122,8 @@ trymovepacmandown:
 	call pacmancollision
 	cmp word[bp-6], 0
 	je canmovepacman
+	cmp word[bp-6], 2
+	je pointfound
 	pop di
 	pop di
 	jmp cantmovepacman
@@ -130,12 +136,16 @@ trymovepacmanup:
 	call pacmancollision
 	cmp word[bp-6], 0
 	je canmovepacman
+	cmp word[bp-6], 2
+	je pointfound
 	pop di
 	pop di
 	jmp cantmovepacman
 
 jmp cantmovepacman
 
+pointfound:
+	inc word[score]
 canmovepacman:
 	pop di
 	pop di
@@ -157,6 +167,7 @@ pacmancollision:
 ; it assumes Pac-Man has been erased first
 ; returns 0 when there is no collision
 ; returns 1 when there is a collision
+; returns 2 when there is a dot that pacman can eat
 	push bp
 	mov bp, sp
 	push cx
@@ -176,6 +187,9 @@ pcli:					; pacman collision loop (inner)
 	je continuepcli
 	cmp byte[es:di], 4
 	jne pc
+
+	mov word[bp+6], 2
+
 continuepcli:
 	inc di
 	loop pcli
@@ -189,6 +203,8 @@ pc:					; pacman collides
 	mov word[bp+6], 1
 	jmp exitpc
 pnc:					; pacman does not collide
+	cmp word[bp+6], 2
+	je exitpc
 	mov word[bp+6], 0
 ;	jmp exitpc
 
