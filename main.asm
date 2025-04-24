@@ -61,6 +61,137 @@ xorshift_state:
 	dd 2527132011			; taken from the output of
 					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
 
+trymovepacman:
+	; takes no arguments
+	push bp
+	mov bp, sp
+	push di
+	
+	call erasepacman
+
+	mov di, [pacmanposition]
+
+	cmp byte[pacmandirection], 0
+	je trymovepacmanleft
+	cmp byte[pacmandirection], 1
+	je trymovepacmanright
+	cmp byte[pacmandirection], 2
+	je trymovepacmandown
+	jmp trymovepacmanup
+
+trymovepacmanleft:
+	push di
+	sub di, 1
+	push 0				; [bp-6]
+	push di
+	call pacmancollision
+	cmp word[bp-6], 0
+	je canmovepacman
+	pop di
+	pop di
+	jmp cantmovepacman
+
+trymovepacmanright:
+	push di
+	add di, 1
+	push 0				; [bp-6]
+	push di
+	call pacmancollision
+	cmp word[bp-6], 0
+	je canmovepacman
+	pop di
+	pop di
+	jmp cantmovepacman
+
+trymovepacmandown:
+	push di
+	add di, 320
+	push 0				; [bp-6]
+	push di
+	call pacmancollision
+	cmp word[bp-6], 0
+	je canmovepacman
+	pop di
+	pop di
+	jmp cantmovepacman
+
+trymovepacmanup:
+	push di
+	sub di, 320
+	push 0				; [bp-6]
+	push di
+	call pacmancollision
+	cmp word[bp-6], 0
+	je canmovepacman
+	pop di
+	pop di
+	jmp cantmovepacman
+
+jmp cantmovepacman
+
+canmovepacman:
+	pop di
+	pop di
+	call movepacman
+	jmp exittrymovepacman
+
+cantmovepacman:
+	call drawpacman
+
+exittrymovepacman:
+	pop di
+	pop bp
+	ret
+
+
+
+pacmancollision:
+; takes two arguments, the return value, and the position of pacman
+; it assumes Pac-Man has been erased first
+; returns 0 when there is no collision
+; returns 1 when there is a collision
+	push bp
+	mov bp, sp
+	push cx
+	push es
+	push di
+
+	push 0xa000
+	pop es
+	
+	mov di, [bp+4]
+	mov cx, 11
+pclo:					; pacman collision loop (outer)
+	push cx
+	mov cx, 11
+pcli:					; pacman collision loop (inner)
+	cmp byte[es:di], 0
+	je continuepcli
+	cmp byte[es:di], 4
+	jne pc
+continuepcli:
+	inc di
+	loop pcli
+	pop cx
+	add di, 320-11
+	loop pclo
+	jmp pnc
+
+pc:					; pacman collides
+	pop cx
+	mov word[bp+6], 1
+	jmp exitpc
+pnc:					; pacman does not collide
+	mov word[bp+6], 0
+;	jmp exitpc
+
+exitpc:
+	pop di
+	pop es
+	pop cx
+	pop bp
+	ret 2
+
 movepacman:
 	; takes one argument, the direction
 	; (0: left, 1: right, 2: down, 3: up)
@@ -807,7 +938,7 @@ start:
 	call drawpacman
 
 moveloop:
-	call movepacman
+	call trymovepacman
 	call ghostschasepacman
 	jmp moveloop
 
