@@ -1,6 +1,13 @@
 [org 0x0100]
 	jmp start
 
+score:
+	dw 0
+
+scorestring:
+	db 'Score:'
+	times 5 db 0
+
 mapfilename:
 	db "map.bmp", 0
 
@@ -891,6 +898,95 @@ clearscr:
 	pop bp
 	ret
 
+printscoretext:
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push es
+	push bp
+
+	mov ax, 0x1380
+	mov bx, 0x000f
+	mov cx, 6
+	mov dx, 0x0500
+	push cs
+	pop es
+	mov bp, scorestring
+	int 0x10
+
+	pop bp
+	pop es
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+
+displayscore:
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push es
+	push bp
+	push di
+	
+	; first printnum sequence from the book
+	push cs
+	pop es
+	mov ax, [score]
+	mov bx, 10
+	mov cx, 0
+
+nextdigit:
+	mov dx, 0
+	div bx
+	add dl, 0x30
+	push dx
+	inc cx
+	cmp ax, 0
+	jnz nextdigit
+	
+	mov di, scorestring+6
+nextpos:
+	pop dx
+	mov [cs:di], dl
+	inc di
+	loop nextpos
+
+clearotherdigitspaces:
+	cmp di, scorestring+10
+	ja printscore
+	mov byte[cs:di], ' '
+	inc di
+	jmp clearotherdigitspaces
+
+printscore:
+	mov ax, 0x1380
+	mov bx, 0x000f
+	mov cx, 5
+	mov dx, 0x0507
+	push bp
+	mov bp, scorestring+6
+	int 0x10
+	pop bp
+
+	pop di
+	pop bp
+	pop es
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+
 ghostschasepacman:
 	; NOTE: if your assembler does not compile this function properly,
 	; uncommenting all the db 0x66 lines should make it work
@@ -936,10 +1032,13 @@ start:
 	call drawmap
 	call drawghosts
 	call drawpacman
+	call printscoretext
 
 moveloop:
 	call trymovepacman
 	call ghostschasepacman
+	call displayscore
+	inc word[score]
 	jmp moveloop
 
 	jmp $
