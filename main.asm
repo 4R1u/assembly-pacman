@@ -1038,7 +1038,6 @@ moveloop:
 	call trymovepacman
 	call ghostschasepacman
 	call displayscore
-	inc word[score]
 	jmp moveloop
 
 	jmp $
