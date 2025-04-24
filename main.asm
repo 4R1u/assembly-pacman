@@ -105,6 +105,38 @@ pacmanskipwrite:
 	pop bp
 	ret
 
+erasepacman:
+	push bp
+	mov bp, sp
+	push bx
+	push cx
+	push es
+	push di
+
+	push 0xa000
+	pop es
+	mov di, [pacmanposition]
+
+	mov cx, 11
+eplo:					; erase pacman loop (outer)
+	push cx
+	mov cx, 11
+epli:					; erase pacman loop (inner)
+	mov byte[es:di], 0
+	inc di
+	loop epli
+
+	add di, 320-11
+	pop cx
+	loop eplo
+	
+	pop di
+	pop es
+	pop cx
+	pop bx
+	pop bp
+	ret 2
+
 xorshift_state:
 	dd 2527132011			; taken from the output of
 					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
