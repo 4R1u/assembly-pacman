@@ -41,6 +41,70 @@ dw 0110111011000000b
 dw 0100010001000000b
 dw 0000000000000000b
 
+pacmanfigure:
+dw 0000000000000000b
+dw 0001111110000000b
+dw 0011111111000000b
+dw 0001111111100000b
+dw 0000011111100000b
+dw 0000000111100000b
+dw 0000011111100000b
+dw 0001111111100000b
+dw 0011111111000000b
+dw 0001111110000000b
+dw 0000000000000000b
+
+
+drawpacman:
+	push bp
+	mov bp, sp
+	push ax
+	push es
+	push ds
+	push si
+	push di
+
+	push 0xa000
+	pop es
+	mov di, word[pacmanposition]
+	push cs
+	pop ds
+	mov si, pacmanfigure
+
+plo:					; pacman loop (outer)
+	push 1000000000000000b		; [bp - 12]
+
+pli:					; pacman loop (inner)
+	mov ax, [si]
+	test ax, [bp-12]
+	jz pacmanskipwrite
+
+	cmp byte[es:di], 0
+	jne pacmanskipwrite
+
+	mov al, 0x2c			; pacman's color is yellowish 0x2c
+	mov [es:di], al
+
+pacmanskipwrite:
+	inc di
+	shr word[bp-12], 1
+	cmp word[bp-12], 10000b
+	jne pli
+
+	pop ax
+	add si, 2
+	add di, 320-11
+	cmp si, pacmanfigure+20
+	jng plo
+
+	pop di
+	pop si
+	pop ds
+	pop es
+	pop ax
+	pop bp
+	ret
+
 xorshift_state:
 	dd 2527132011			; taken from the output of
 					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
@@ -659,6 +723,7 @@ start:
 	call loadpalette
 	call drawmap
 	call drawghosts
+	call drawpacman
 
 moveloop:
 	call ghostschasepacman
