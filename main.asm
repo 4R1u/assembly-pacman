@@ -67,6 +67,43 @@ dw 0111111110000000b
 dw 0011111100000000b
 dw 0000000000000000b
 
+dw 0000000000000000b
+dw 0011111100000000b
+dw 0111111110000000b
+dw 0111111100000000b
+dw 0111111000000000b
+dw 0111100000000000b
+dw 0111111000000000b
+dw 0111111100000000b
+dw 0111111110000000b
+dw 0011111100000000b
+dw 0000000000000000b
+
+dw 0000000000000000b
+dw 0001111100000000b
+dw 0011111110000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111101111000000b
+dw 0111101111000000b
+dw 0111000111000000b
+dw 0011000110000000b
+dw 0001000100000000b
+dw 0000000000000000b
+
+dw 0000000000000000b
+dw 0001000100000000b
+dw 0011000110000000b
+dw 0111000111000000b
+dw 0111101111000000b
+dw 0111101111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0011111110000000b
+dw 0001111100000000b
+dw 0000000000000000b
+
+
 xorshift_state:
 	dd 2527132011			; taken from the output of
 					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
@@ -412,6 +449,9 @@ drawpacman:
 	push bp
 	mov bp, sp
 	push ax
+	push bx
+	push cx
+	push dx
 	push es
 	push ds
 	push si
@@ -422,14 +462,22 @@ drawpacman:
 	mov di, word[pacmanposition]
 	push cs
 	pop ds
-	mov si, pacmanfigure
+
+	mov dx, 0
+	mov ah, 0
+	mov al, byte[pacmandirection]
+	; 22 is twice 11
+	mov si, 22
+	mul si
+	mov si, ax
+	add si, pacmanfigure
 
 plo:					; pacman loop (outer)
-	push 1000000000000000b		; [bp - 12]
+	push 1000000000000000b		; [bp - 18]
 
 pli:					; pacman loop (inner)
 	mov ax, [si]
-	test ax, [bp-12]
+	test ax, [bp-18]
 	jz pacmanskipwrite
 
 	cmp byte[es:di], 0
@@ -440,20 +488,24 @@ pli:					; pacman loop (inner)
 
 pacmanskipwrite:
 	inc di
-	shr word[bp-12], 1
-	cmp word[bp-12], 10000b
+	shr word[bp-18], 1
+	cmp word[bp-18], 10000b
 	jne pli
 
 	pop ax
 	add si, 2
 	add di, 320-11
-	cmp si, pacmanfigure+20
+	add cx, 1
+	cmp cx, 10
 	jng plo
 
 	pop di
 	pop si
 	pop ds
 	pop es
+	pop dx
+	pop cx
+	pop bx
 	pop ax
 	pop bp
 	ret
