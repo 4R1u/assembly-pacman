@@ -266,6 +266,7 @@ checkghostcollisionwithpacman:
 	push bp
 	mov bp, sp
 	push ax
+	push si
 
 
 	mov ax, [pacmanposition]
@@ -299,6 +300,7 @@ pdncwg:
 	mov word[bp+6], 0
 
 exitcheckghostcollisionwithpacman:
+	pop si
 	pop ax
 	pop bp
 	ret 2
