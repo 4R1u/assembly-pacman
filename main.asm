@@ -252,6 +252,8 @@ gameisover:
 
 noghostscollide:
 	mov word[bp+4], 0
+	cmp word[score], 251
+	jge gameisover
 ;	jmp exitcheckforgameover
 
 exitcheckforgameover:
