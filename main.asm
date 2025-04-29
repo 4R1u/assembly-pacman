@@ -28,6 +28,9 @@ ghostpositions:
 four:
 	dd 4				; this is needed for the modulo
 
+oldkbisr:
+	dd 0
+
 pacmanposition:
 	dw 75*320+193+53*320		; this should have been 74*320+193+53*320, but it was one pixel too close to the dots
 
@@ -67,6 +70,63 @@ dw 0000000000000000b
 xorshift_state:
 	dd 2527132011			; taken from the output of
 					; https://github.com/umireon/my-random-stuff/blob/master/xorshift/splitmix32.c
+
+newkbisr:
+	push bp
+	mov bp, sp
+	push ax
+
+	in al, 0x60
+
+	cmp al, 0x56
+	je cmpleft
+	cmp al, 0x1e
+	je cmpleft
+	cmp al, 0x4b
+	je cmpleft
+
+	cmp al, 0x7d
+	je cmpright
+	cmp al, 0x20
+	je cmpright
+	cmp al, 0x4d
+	je cmpright
+
+	cmp al, 0x55
+	je cmpdown
+	cmp al, 0x1f
+	je cmpdown
+	cmp al, 0x78
+	je cmpdown
+	cmp al, 0x50
+	je cmpdown
+
+	cmp al, 0x78
+	je cmpup
+	cmp al, 0x11
+	je cmpup
+	cmp al, 0x48
+	je cmpup
+
+	jmp exitnewkbisr
+
+cmpleft:
+	mov byte[pacmandirection], 0
+	jmp exitnewkbisr
+cmpright:
+	mov byte[pacmandirection], 1
+	jmp exitnewkbisr
+cmpdown:
+	mov byte[pacmandirection], 2
+	jmp exitnewkbisr
+cmpup:
+	jne exitnewkbisr
+	mov byte[pacmandirection], 3
+
+exitnewkbisr:
+	pop ax
+	pop bp
+	jmp far [cs:oldkbisr]
 
 trymovepacman:
 	; takes no arguments
@@ -1123,6 +1183,19 @@ exitghostschasepacman:
 	ret
 
 start:
+	push 0
+	pop es
+
+	mov ax, [es:4*9]
+	mov [oldkbisr], ax
+	mov ax, [es:4*9+2]
+	mov [oldkbisr+2], ax
+
+	cli
+	mov word[es:4*9], newkbisr
+	mov word[es:4*9+2], cs
+	sti
+
 	mov ax, 0x13
 	int 0x10
 	mov bp, sp
