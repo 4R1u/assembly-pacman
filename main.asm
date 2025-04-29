@@ -160,6 +160,88 @@ exittrymovepacman:
 	pop bp
 	ret
 
+checkforgameover:
+; takes one argument, the return value
+; returns 1 if game is over
+; 0 if not
+	push bp
+	mov bp, sp
+	push ax
+	push cx
+
+	mov cx, 0
+cfgol:
+	cmp cx, 8
+	jnl noghostscollide
+	
+	push 0
+	push cx
+	call checkghostcollisionwithpacman
+	cmp word[bp-6], 0
+	jne gameisover
+
+	pop ax
+
+	add cx, 2
+	jmp cfgol
+	
+gameisover:
+	pop ax
+	mov word[bp+4], 1
+	jmp exitcheckforgameover
+
+noghostscollide:
+	mov word[bp+4], 0
+;	jmp exitcheckforgameover
+
+exitcheckforgameover:
+	pop cx
+	pop ax
+	pop bp
+	ret
+
+checkghostcollisionwithpacman:
+; takes two arguments (ghost number and return value)
+; returns 0 if there is no collision, 1 if there is
+	push bp
+	mov bp, sp
+	push ax
+
+
+	mov ax, [pacmanposition]
+	mov si, [bp+4]
+	mov si, [ghostpositions+si]
+	sub ax, si
+	
+	cmp ax, -320*11-11
+	je pdcwg
+	cmp ax, -320*11
+	je pdcwg
+	cmp ax, -320*11+11
+	je pdcwg
+	cmp ax, -11
+	je pdcwg
+	cmp ax, 11
+	je pdcwg
+	cmp ax, 320*11-11
+	je pdcwg
+	cmp ax, 320*11
+	je pdcwg
+	cmp ax, 320*11+11
+	je pdcwg
+	jmp pdncwg
+
+pdcwg:
+	mov word[bp+6], 1
+	jmp exitcheckghostcollisionwithpacman
+
+pdncwg:
+	mov word[bp+6], 0
+
+exitcheckghostcollisionwithpacman:
+	pop ax
+	pop bp
+	ret 2
 
 
 pacmancollision:
@@ -1043,6 +1125,7 @@ exitghostschasepacman:
 start:
 	mov ax, 0x13
 	int 0x10
+	mov bp, sp
 
 	call loadpalette
 	call drawmap
@@ -1050,11 +1133,19 @@ start:
 	call drawpacman
 	call printscoretext
 
+	push ax
+
 moveloop:
+	pop ax
 	call trymovepacman
 	call ghostschasepacman
 	call displayscore
-	jmp moveloop
+	push 0
+	call checkforgameover
+	cmp word[bp-2], 0
+	je moveloop
+
+	pop ax
 
 	jmp $
 
