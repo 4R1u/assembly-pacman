@@ -1210,9 +1210,14 @@ start:
 
 moveloop:
 	pop ax
-	call trymovepacman
+	mov cx, 10
+
+moveloopghosts:
 	call ghostschasepacman
 	call displayscore
+	loop moveloopghosts
+
+	call trymovepacman
 	push 0
 	call checkforgameover
 	cmp word[bp-2], 0
