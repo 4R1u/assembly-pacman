@@ -37,6 +37,9 @@ pacmanposition:
 pacmandirection:
 	db 0
 
+pacmanclosedmouth:
+	db 0
+
 ghostcolors:
 	dw 0x28, 0x35, 0x58, 0xe
 
@@ -52,6 +55,19 @@ dw 0111111111000000b
 dw 0111111111000000b
 dw 0110111011000000b
 dw 0100010001000000b
+dw 0000000000000000b
+
+pacmanclosedmouthfigure:
+dw 0000000000000000b
+dw 0001111100000000b
+dw 0011111110000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0111111111000000b
+dw 0011111110000000b
+dw 0001111100000000b
 dw 0000000000000000b
 
 pacmanfigure:
@@ -437,6 +453,7 @@ pacmanup:
 	jmp redrawpacman
 
 redrawpacman:
+	xor byte[pacmanclosedmouth], 1
 	call drawpacman
 
 	pop di
@@ -462,6 +479,10 @@ drawpacman:
 	mov di, word[pacmanposition]
 	push cs
 	pop ds
+	mov cx, 0
+
+	cmp byte[pacmanclosedmouth], 0
+	jne drawcircle
 
 	mov dx, 0
 	mov ah, 0
@@ -471,6 +492,10 @@ drawpacman:
 	mul si
 	mov si, ax
 	add si, pacmanfigure
+	jmp plo
+
+drawcircle:
+	mov si, pacmanclosedmouthfigure
 
 plo:					; pacman loop (outer)
 	push 1000000000000000b		; [bp - 18]
