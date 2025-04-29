@@ -1264,6 +1264,17 @@ exitghostschasepacman:
 	ret
 
 start:
+
+	mov eax, 0
+	mov al, 0x00
+	out 0x70, al
+	jmp D1
+	
+	mov [xorshift_state], eax
+
+D1:
+	in al, 0x71
+
 	push 0
 	pop es
 
