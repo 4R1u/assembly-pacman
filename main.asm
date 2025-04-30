@@ -4,6 +4,12 @@
 score:
 	dw 0
 
+isgameover:
+	db 0
+
+time:
+	db 0
+
 scorestring:
 	db 'Score:'
 	times 5 db 0
@@ -29,6 +35,9 @@ four:
 	dd 4				; this is needed for the modulo
 
 oldkbisr:
+	dd 0
+
+oldtimerisr:
 	dd 0
 
 pacmanposition:
@@ -173,13 +182,55 @@ cmpdown:
 	mov byte[pacmandirection], 2
 	jmp exitnewkbisr
 cmpup:
-	jne exitnewkbisr
 	mov byte[pacmandirection], 3
 
 exitnewkbisr:
 	pop ax
 	pop bp
 	jmp far [cs:oldkbisr]
+
+newtimerisr:
+	push bp
+	mov bp, sp
+	push ax
+	inc byte[time]
+	cmp byte[isgameover], 0
+	jne waitaftergameisover
+
+	push 0
+	call checkforgameover
+	cmp byte[bp-4], 0
+	jne endgame
+	pop ax
+	
+	call ghostschasepacman
+	cmp byte[time], 2
+	jnge exitnewtimerisr
+
+	call trymovepacman
+	call displayscore
+	mov byte[time], 0
+	jmp exitnewtimerisr
+
+endgame:
+	pop ax
+	mov byte[isgameover], 1
+	jmp exitnewtimerisr
+
+waitaftergameisover:
+	cmp byte[time], 18*5
+	jl exitnewtimerisr
+	jg screencleared
+	call clearscr
+	jmp exitnewtimerisr
+
+screencleared:
+	mov byte[time], 201
+
+exitnewtimerisr:
+	pop ax
+	pop bp
+	jmp far [cs:oldtimerisr]
 
 trymovepacman:
 	; takes no arguments
@@ -1278,12 +1329,16 @@ D1:
 	push 0
 	pop es
 
-	mov ax, [es:4*9]
-	mov [oldkbisr], ax
-	mov ax, [es:4*9+2]
-	mov [oldkbisr+2], ax
+	mov eax, [es:4*8]
+	mov [oldtimerisr], eax
+
+	mov eax, [es:4*9]
+	mov [oldkbisr], eax
 
 	cli
+	mov word[es:4*8], newtimerisr
+	mov word[es:4*8+2], cs
+	
 	mov word[es:4*9], newkbisr
 	mov word[es:4*9+2], cs
 	sti
@@ -1298,24 +1353,24 @@ D1:
 	call drawpacman
 	call printscoretext
 
-	push ax
+;	push ax
 
-moveloop:
-	pop ax
-	mov cx, 10
+;moveloop:
+;	pop ax
+;	mov cx, 10
 
-moveloopghosts:
-	call ghostschasepacman
-	call displayscore
-	loop moveloopghosts
+;moveloopghosts:
+;	call ghostschasepacman
+;	call displayscore
+;	loop moveloopghosts
+;
+;	call trymovepacman
+;	push 0
+;	call checkforgameover
+;	cmp word[bp-2], 0
+;	je moveloop
 
-	call trymovepacman
-	push 0
-	call checkforgameover
-	cmp word[bp-2], 0
-	je moveloop
-
-	pop ax
+;	pop ax
 
 	jmp $
 
