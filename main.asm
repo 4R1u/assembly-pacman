@@ -13,6 +13,7 @@ time:
 scorestring:
 	db 'Score:'
 	times 5 db 0
+	db '$'
 
 mapfilename:
 	db "map.bmp", 0
@@ -51,6 +52,9 @@ pacmanclosedmouth:
 
 ghostcolors:
 	dw 0x28, 0x35, 0x58, 0xe
+
+yourscorewas:
+	db "Your score was: $"
 
 ghostfigure:
 ;             v-----image stops here, from the 12th column onwards
@@ -1316,6 +1320,28 @@ exitghostschasepacman:
 	pop bp
 	ret
 
+displayscoreattheend:
+	push bp
+	mov bp, sp
+	push ax
+	push dx
+	push ds
+
+	mov ah, 0x09
+	push cs
+	pop ds
+	mov dx, yourscorewas
+	int 0x21
+
+	mov dx, scorestring+6
+	int 0x21
+
+	pop ds
+	pop dx
+	pop ax
+	pop bp
+	ret
+
 start:
 
 	mov eax, 0
@@ -1380,6 +1406,8 @@ gameloop:
 
 	cmp byte[time], 18*5+1
 	jl gameloop
+
+	call displayscoreattheend
 
 	mov ax, 0x4c00
 	int 0x21
