@@ -364,7 +364,7 @@ gameisover:
 
 noghostscollide:
 	mov word[bp+4], 0
-	cmp word[score], 251
+	cmp word[score], 250
 	jge gameiswon
 ;	jmp exitcheckforgameover
 
