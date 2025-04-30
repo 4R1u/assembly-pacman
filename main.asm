@@ -225,7 +225,9 @@ waitaftergameisover:
 	jmp exitnewtimerisr
 
 screencleared:
-	mov byte[time], 201
+	pop ax
+	pop bp
+	jmp exit
 
 exitnewtimerisr:
 	pop ax
@@ -1372,10 +1374,29 @@ D1:
 
 ;	pop ax
 
-	jmp $
+gameloop:
+	cmp byte[isgameover], 0
+	je gameloop
 
-exit:
-	mov ax, 3
-	int 0x10
+	cmp byte[time], 18*5+1
+	jl gameloop
+
 	mov ax, 0x4c00
 	int 0x21
+
+exit:
+	mov al, 0x20
+	out 0x20, al
+
+	push 0
+	pop es
+	cli
+	mov eax, [oldtimerisr]
+	mov [es:4*8], eax
+	mov eax, [oldkbisr]
+	mov [es:4*9], eax
+	sti
+
+	mov ax, 3
+	int 0x10
+	iret
