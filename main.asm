@@ -355,6 +355,8 @@ cfgol:
 	add cx, 2
 	jmp cfgol
 	
+gameiswon:
+	push ax
 gameisover:
 	pop ax
 	mov word[bp+4], 1
@@ -363,7 +365,7 @@ gameisover:
 noghostscollide:
 	mov word[bp+4], 0
 	cmp word[score], 251
-	jge gameisover
+	jge gameiswon
 ;	jmp exitcheckforgameover
 
 exitcheckforgameover:
