@@ -1435,25 +1435,6 @@ D1:
 	call drawpacman
 	call printscoretext
 
-;	push ax
-
-;moveloop:
-;	pop ax
-;	mov cx, 10
-
-;moveloopghosts:
-;	call ghostschasepacman
-;	call displayscore
-;	loop moveloopghosts
-;
-;	call trymovepacman
-;	push 0
-;	call checkforgameover
-;	cmp word[bp-2], 0
-;	je moveloop
-
-;	pop ax
-
 gameloop:
 	cmp byte[isgameover], 0
 	je gameloop
