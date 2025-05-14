@@ -37,8 +37,16 @@ isgameover:
 time:
 	db 0
 
+lives:
+	dw 3
+
 scorestring:
 	db 'Score:'
+	times 5 db 0
+	db '$'
+
+livesstring:
+	db 'Lives:'
 	times 5 db 0
 	db '$'
 
@@ -228,14 +236,16 @@ newtimerisr:
 	cmp byte[isgameover], 0
 	jne waitaftergameisover
 
+	call displaylives
+
 	push 0
 	call checkforgameover
 	cmp byte[bp-4], 0
 	jne endgame
 	pop ax
-	
+
 	call ghostschasepacman
-	cmp byte[time], 10
+	cmp byte[time], 30
 	jnge exitnewtimerisr
 
 	call trymovepacman
@@ -270,7 +280,7 @@ trymovepacman:
 	push bp
 	mov bp, sp
 	push di
-	
+
 	call erasepacman
 
 	mov di, [pacmanposition]
@@ -370,22 +380,45 @@ checkforgameover:
 cfgol:
 	cmp cx, 8
 	jnl noghostscollide
-	
+
 	push 0
 	push cx
 	call checkghostcollisionwithpacman
 	cmp word[bp-6], 0
-	jne gameisover
+	jne pacmanhitghost
 
 	pop ax
 
 	add cx, 2
 	jmp cfgol
-	
+
 gameiswon:
 	push ax
-gameisover:
+pacmanhitghost:
 	pop ax
+
+	dec word[lives]
+	cmp word[lives], 0
+	je gameisover
+
+	mov word[bp+4], 0
+	call erasepacman
+	mov word[pacmanposition], 75*320+193+53*320
+	push 0
+	call eraseghost
+	mov word[ghostpositions], 20*320+193+53*320
+	push 2
+	call eraseghost
+	mov word[ghostpositions+2], 37*320+182+53*320
+	push 4
+	call eraseghost
+	mov word[ghostpositions+4], 37*320+193+53*320
+	push 6
+	call eraseghost
+	mov word[ghostpositions+6], 37*320+204+53*320
+	jmp exitcheckforgameover
+
+gameisover:
 	mov word[bp+4], 1
 	jmp exitcheckforgameover
 
@@ -414,7 +447,7 @@ checkghostcollisionwithpacman:
 	mov si, [bp+4]
 	mov si, [ghostpositions+si]
 	sub ax, si
-	
+
 	cmp ax, -320*11-11
 	je pdcwg
 	cmp ax, -320*11
@@ -461,7 +494,7 @@ pacmancollision:
 
 	push 0xa000
 	pop es
-	
+
 	mov di, [bp+4]
 	mov cx, 11
 pclo:					; pacman collision loop (outer)
@@ -645,7 +678,7 @@ epli:					; erase pacman loop (inner)
 	add di, 320-11
 	pop cx
 	loop eplo
-	
+
 	pop di
 	pop es
 	pop cx
@@ -708,14 +741,14 @@ skipresetxorshiftstate:
 	shl eax, 17
 	; db 0x66
 	xor [bp+4], eax
-	
+
 	; db 0x66
 	mov eax, [bp+4]
 	; db 0x66
 	shr eax, 5
 	; db 0x66
 	xor [bp+4], eax
-	
+
 	; db 0x66
 	mov eax, [bp+4]
 	; db 0x66
@@ -782,7 +815,7 @@ trymoveghost:
 	push bp
 	mov bp, sp
 	push di
-	
+
 	push word[bp+4]
 	call eraseghost
 
@@ -886,7 +919,7 @@ ghostcollision:
 
 	push 0xa000
 	pop es
-	
+
 	mov di, [bp+4]
 	mov cx, 11
 gclo:					; ghost collision loop (outer)
@@ -1009,7 +1042,7 @@ skiperase:
 	add di, 320-11
 	pop cx
 	loop eglo
-	
+
 	pop di
 	pop es
 	pop cx
@@ -1251,6 +1284,34 @@ printscoretext:
 	pop bp
 	ret
 
+printlivestext:
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push es
+	push bp
+
+	mov ax, 0x1380
+	mov bx, 0x000f
+	mov cx, 6
+	mov dx, 0x1300
+	push cs
+	pop es
+	mov bp, livesstring
+	int 0x10
+
+	pop bp
+	pop es
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+
 displayscore:
 	push bp
 	mov bp, sp
@@ -1261,7 +1322,7 @@ displayscore:
 	push es
 	push bp
 	push di
-	
+
 	; first printnum sequence from the book
 	push cs
 	pop es
@@ -1277,7 +1338,7 @@ nextdigit:
 	inc cx
 	cmp ax, 0
 	jnz nextdigit
-	
+
 	mov di, scorestring+6
 nextpos:
 	pop dx
@@ -1299,6 +1360,67 @@ printscore:
 	mov dx, 0x0507
 	push bp
 	mov bp, scorestring+6
+	int 0x10
+	pop bp
+
+	pop di
+	pop bp
+	pop es
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+
+displaylives:
+	push bp
+	mov bp, sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push es
+	push bp
+	push di
+
+	; first printnum sequence from the book
+	push cs
+	pop es
+	mov ax, [lives]
+	mov bx, 10
+	mov cx, 0
+
+nextlivesdigit:
+	mov dx, 0
+	div bx
+	add dl, 0x30
+	push dx
+	inc cx
+	cmp ax, 0
+	jnz nextlivesdigit
+
+	mov di, livesstring+6
+nextlivespos:
+	pop dx
+	mov [cs:di], dl
+	inc di
+	loop nextlivespos
+
+clearotherlivesdigitspaces:
+	cmp di, livesstring+10
+	ja printlives
+	mov byte[cs:di], ' '
+	inc di
+	jmp clearotherlivesdigitspaces
+
+printlives:
+	mov ax, 0x1380
+	mov bx, 0x000f
+	mov cx, 5
+	mov dx, 0x1307
+	push bp
+	mov bp, livesstring+6
 	int 0x10
 	pop bp
 
@@ -1375,17 +1497,12 @@ start:
 
 	mov al, 0x36
 	out 0x43, al
-	
-	mov ax, 11931
-	out 0x40, al
-	mov al, ah
-	out 0x40, al
 
 	mov eax, 0
 	mov al, 0x00
 	out 0x70, al
 	jmp D1
-	
+
 	mov [xorshift_state], eax
 
 D1:
@@ -1402,7 +1519,7 @@ D1:
 	mov dx, 0x0000
 	mov bp, titlescreen
 	int 0x10
-	
+
 	mov ah, 0
 	int 0x16
 
@@ -1420,13 +1537,11 @@ D1:
 	cli
 	mov word[es:4*8], newtimerisr
 	mov word[es:4*8+2], cs
-	
+
 	mov word[es:4*9], newkbisr
 	mov word[es:4*9+2], cs
 	sti
 
-	mov ax, 0x13
-	int 0x10
 	mov bp, sp
 
 	call loadpalette
@@ -1434,25 +1549,12 @@ D1:
 	call drawghosts
 	call drawpacman
 	call printscoretext
+	call printlivestext
 
-;	push ax
-
-;moveloop:
-;	pop ax
-;	mov cx, 10
-
-;moveloopghosts:
-;	call ghostschasepacman
-;	call displayscore
-;	loop moveloopghosts
-;
-;	call trymovepacman
-;	push 0
-;	call checkforgameover
-;	cmp word[bp-2], 0
-;	je moveloop
-
-;	pop ax
+	mov ax, 1193182 / 200
+	out 0x40, al
+	mov al, ah
+	out 0x40, al
 
 gameloop:
 	cmp byte[isgameover], 0
