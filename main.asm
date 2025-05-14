@@ -4,6 +4,33 @@
 score:
 	dw 0
 
+titlescreen:
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "             assembly-pacman            "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                by: 4R1u                "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "         Press any key to start         "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+	db "                                        "
+
 isgameover:
 	db 0
 
@@ -1363,6 +1390,23 @@ start:
 
 D1:
 	in al, 0x71
+
+	mov ax, 0x13
+	int 0x10
+
+	mov ax, 0x1380
+	mov bx, 0x000f
+	push cs
+	pop es
+	mov cx, 25*40
+	mov dx, 0x0000
+	mov bp, titlescreen
+	int 0x10
+	
+	mov ah, 0
+	int 0x16
+
+	call clearscr
 
 	push 0
 	pop es
