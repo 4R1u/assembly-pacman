@@ -5,9 +5,9 @@
 A simplistic implementation of Pac-Man in 16-bit x86 Assembly for the DOSBox 
 environment.
 This was the final project in my Computer Organization and Assembly Language
-course at university.
+course at my university.
 
-- This game runs on mode 13h, like a number of games from the DOS era.
+- This game runs in mode 13h, like a number of games from the DOS era.
 - It runs in real mode
 - The game loads a map file into "VRAM," and constantly tracks the locations of 
 and redraws sprites.
