@@ -15,7 +15,7 @@ and redraws sprites.
 
 ## Installation
 
-1. [install DOSBox](https://www.dosbox.com/download.php?main=1)
+1. [Install DOSBox](https://www.dosbox.com/download.php?main=1)
 2. Download and extract or clone this repo to a folder
 
 ``git clone git@github.com:4R1u/assembly-pacman.git ~/Downloads/assembly-pacman``
