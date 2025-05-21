@@ -18,7 +18,9 @@ and redraws sprites.
 1. [Install DOSBox](https://www.dosbox.com/download.php?main=1)
 2. Download and extract or clone this repo to a folder
 
-``git clone git@github.com:4R1u/assembly-pacman.git ~/Downloads/assembly-pacman``
+```bash
+git clone git@github.com:4R1u/assembly-pacman.git ~/Downloads/assembly-pacman
+```
 
 3. [Install NASM](https://www.nasm.us/pub/nasm/snapshots/latest/dos/) into a
 new folder in the parent directory of the game, such as `~/Downloads/nasm` in
@@ -26,27 +28,39 @@ this case
 4. Launch DOSBox
 5. Mount the folder in which NASM resides
 
-``MOUNT C ~/Downloads/``
+```dos
+MOUNT C ~/Downloads/
+```
 
 6. Switch to the mounted drive
 
-``C:``
+```dos
+C:
+```
 
 7. Switch to the folder which has the NASM executable
 
-``cd NASM``
+```dos
+cd NASM
+```
 
 8. Compile the game (use TAB completion, because DOSBox has length limits):
 
-``NASM.EXE C:/assem<TAB>/main.asm -o C:/assem<TAB>/game.com``
+```dos
+NASM.EXE C:/assem<TAB>/main.asm -o C:/assem<TAB>/game.com
+```
 
 9. Switch to the directory which has the game:
 
-``cd C:/assem<TAB>``
+```dos
+cd C:/assem<TAB>
+```
 
 10. Run the game:
 
-``game.com``
+```dos
+game.com
+```
 
 You can change the directories, the main thing to keep in mind is that NASM 
 has to be accessible from your mount point, and that the game executable and 
