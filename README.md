@@ -4,7 +4,7 @@
 
 A simplistic implementation of Pac-Man in 16-bit x86 Assembly for the DOSBox 
 environment.
-This was the final project in my Computer Organization and Assembly Language
+This was the final project in the "Computer Organization and Assembly Language"
 course at my university.
 
 - This game runs in mode 13h, like a number of games from the DOS era.
